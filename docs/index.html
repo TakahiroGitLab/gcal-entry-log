@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <base target="_top">
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Calendar Entry Log</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap">
+
+  <style>
+    /* ---------------------------------------------------------------
+       Liquid-glass treatment. The effect is layered translucency:
+       a colourful backdrop, panels that blur and saturate whatever is
+       behind them, a bright specular edge, and a wide soft shadow.
+       Without the coloured backdrop the glass reads as flat grey, so
+       the two belong together.
+       --------------------------------------------------------------- */
+
+    :root {
+      --glass: rgba(255, 255, 255, 0.55);
+      --glass-strong: rgba(255, 255, 255, 0.68);
+      --glass-edge: rgba(255, 255, 255, 0.55);
+      --blur: blur(20px) saturate(180%);
+
+      --shadow:
+        0 8px 24px rgba(28, 40, 64, 0.10),
+        0 1px 2px rgba(28, 40, 64, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.75);
+
+      --shadow-lift:
+        0 14px 34px rgba(28, 40, 64, 0.14),
+        0 1px 2px rgba(28, 40, 64, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85);
+
+      /* ---- Theme. Change these six lines to recolour the app. ----
+         The RGB triplets feed rgb(... / alpha) throughout, so tints,
+         borders, focus rings and shadows all follow. --blob-* are the
+         backdrop the glass blurs; keep them light and low-alpha. */
+      --accent-rgb: 124 58 237;
+      --accent-deep: #6d28d9;
+
+      --warn-rgb: 217 119 6;
+      --warn-deep: #92400e;
+
+      --blob-1: rgba(167, 139, 250, 0.55);
+      --blob-2: rgba(244, 114, 182, 0.40);
+      --blob-3: rgba(94, 234, 212, 0.38);
+      /* ------------------------------------------------------------- */
+
+      --accent: rgb(var(--accent-rgb));
+      --ink: #1c1c1e;
+      --ink-soft: #55575c;
+      --ink-faint: #85878c;
+    }
+
+
+    body {
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Helvetica Neue",
+        Arial,
+        sans-serif;
+
+      margin: 0;
+      padding: 32px;
+
+      min-height: 100vh;
+
+      color: var(--ink);
+
+      background-color: #e9eef7;
+
+      background-image:
+        radial-gradient(60rem 40rem at 10% -12%,
+          var(--blob-1), transparent 60%),
+        radial-gradient(50rem 36rem at 94% 4%,
+          var(--blob-2), transparent 62%),
+        radial-gradient(46rem 34rem at 72% 98%,
+          var(--blob-3), transparent 60%);
+
+      background-attachment: fixed;
+    }
+
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+
+    .header {
+      display: flex;
+
+      align-items: flex-start;
+
+      justify-content: space-between;
+
+      flex-wrap: wrap;
+
+      gap: 20px 32px;
+
+      margin-bottom: 20px;
+    }
+
+
+    .header-main {
+      min-width: 0;
+    }
+
+
+    h1 {
+      margin: 0 0 6px 0;
+
+      font-size: 30px;
+
+      letter-spacing: -0.02em;
+    }
+
+
+    .subtitle {
+      color: var(--ink-soft);
+
+      font-size: 14px;
+
+      margin-bottom: 10px;
+    }
+
+
+    .date {
+      color: var(--ink-faint);
+    }
+
+
+    /* Pen-written motto, sitting directly on the backdrop rather than
+       on its own pane -- a second glass card here would compete with
+       the toolbar. Zen Kurenaido is a felt-tip hand covering both the
+       Japanese and the Latin attribution. */
+    .motto {
+      font-family:
+        "Zen Kurenaido",
+        "Hiragino Mincho ProN",
+        "Yu Mincho",
+        serif;
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: flex-end;
+
+      text-align: right;
+
+      color: var(--ink-soft);
+
+      transform: rotate(-1.2deg);
+
+      padding-top: 4px;
+
+      max-width: 340px;
+    }
+
+
+    .motto-text {
+      font-size: 17px;
+
+      line-height: 1.65;
+    }
+
+
+    .motto-author {
+      font-size: 13px;
+
+      margin-top: 7px;
+
+      color: var(--ink-faint);
+    }
+
+
+    /* Below the wrap point the motto sits under the title, so line it
+       up with everything else rather than leaving it stranded right. */
+    @media (max-width: 640px) {
+
+      .motto {
+        text-align: left;
+
+        max-width: none;
+      }
+    }
+
+
+    .status {
+      margin-bottom: 18px;
+
+      color: var(--ink-soft);
+
+      padding-left: 2px;
+    }
+
+
+    /* The toolbar reads as one pane of glass holding every control. */
+    .panel {
+      background: var(--glass);
+
+      -webkit-backdrop-filter: var(--blur);
+      backdrop-filter: var(--blur);
+
+      border: 1px solid var(--glass-edge);
+
+      border-radius: 22px;
+
+      padding: 16px 18px;
+
+      margin-bottom: 20px;
+
+      box-shadow: var(--shadow);
+    }
+
+
+    .controls,
+    .presets,
+    .roles {
+      display: flex;
+
+      flex-wrap: wrap;
+
+      align-items: center;
+
+      gap: 8px;
+    }
+
+
+    .controls {
+      margin-bottom: 12px;
+    }
+
+
+    .presets {
+      margin-bottom: 12px;
+    }
+
+
+    .roles {
+      gap: 20px;
+
+      padding-top: 12px;
+
+      border-top: 1px solid rgba(120, 130, 150, 0.18);
+    }
+
+
+    .roles label {
+      display: flex;
+
+      align-items: center;
+
+      gap: 7px;
+
+      font-size: 14px;
+
+      color: var(--ink-soft);
+
+      cursor: pointer;
+    }
+
+
+    .roles input[type="checkbox"] {
+      width: 17px;
+
+      height: 17px;
+
+      accent-color: var(--accent);
+
+      cursor: pointer;
+    }
+
+
+    .range-sep {
+      color: var(--ink-faint);
+    }
+
+
+    input[type="date"] {
+      font-family: inherit;
+
+      font-size: 14px;
+
+      padding: 8px 12px;
+
+      border: 1px solid rgba(255, 255, 255, 0.6);
+
+      border-radius: 12px;
+
+      background: rgba(255, 255, 255, 0.6);
+
+      -webkit-backdrop-filter: blur(8px) saturate(160%);
+      backdrop-filter: blur(8px) saturate(160%);
+
+      box-shadow:
+        inset 0 1px 2px rgba(28, 40, 64, 0.06);
+
+      color: var(--ink);
+    }
+
+
+    input[type="date"]:focus {
+      outline: none;
+
+      border-color: rgb(var(--accent-rgb) / 0.55);
+
+      box-shadow:
+        0 0 0 3px rgb(var(--accent-rgb) / 0.18),
+        inset 0 1px 2px rgba(28, 40, 64, 0.06);
+    }
+
+
+    /* Prominent action: tinted glass rather than a flat fill. */
+    button {
+      border: 1px solid rgba(255, 255, 255, 0.35);
+
+      border-radius: 999px;
+
+      padding: 8px 16px;
+
+      background: rgb(var(--accent-rgb) / 0.88);
+
+      -webkit-backdrop-filter: blur(12px) saturate(180%);
+      backdrop-filter: blur(12px) saturate(180%);
+
+      color: white;
+
+      font-size: 14px;
+
+      font-weight: 500;
+
+      cursor: pointer;
+
+      box-shadow:
+        0 4px 14px rgb(var(--accent-rgb) / 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.45);
+
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        background 0.15s ease;
+    }
+
+
+    button:hover {
+      background: rgb(var(--accent-rgb) / 0.99);
+
+      box-shadow:
+        0 6px 18px rgb(var(--accent-rgb) / 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+
+    .presets button {
+      background: rgba(255, 255, 255, 0.55);
+
+      border: 1px solid rgba(255, 255, 255, 0.7);
+
+      color: var(--ink-soft);
+
+      box-shadow:
+        0 2px 8px rgba(28, 40, 64, 0.07),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+
+    .presets button:hover {
+      background: rgba(255, 255, 255, 0.75);
+    }
+
+
+    .presets button.active {
+      background: rgb(var(--accent-rgb) / 0.14);
+
+      border-color: rgb(var(--accent-rgb) / 0.4);
+
+      color: var(--accent-deep);
+
+      font-weight: 600;
+
+      box-shadow:
+        0 2px 10px rgb(var(--accent-rgb) / 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+
+    button.needs-refresh {
+      background: rgb(var(--warn-rgb) / 0.9);
+
+      box-shadow:
+        0 4px 14px rgb(var(--warn-rgb) / 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.45);
+
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+
+
+    button.needs-refresh:hover {
+      background: rgb(var(--warn-rgb) / 1);
+    }
+
+
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow:
+          0 0 0 0 rgb(var(--warn-rgb) / 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      }
+
+      50% {
+        box-shadow:
+          0 0 0 8px rgb(var(--warn-rgb) / 0),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      }
+    }
+
+
+    @media (prefers-reduced-motion: reduce) {
+
+      button.needs-refresh {
+        animation: none;
+      }
+    }
+
+
+    .event {
+      position: relative;
+
+      background: var(--glass);
+
+      -webkit-backdrop-filter: var(--blur);
+      backdrop-filter: var(--blur);
+
+      border: 1px solid var(--glass-edge);
+
+      border-radius: 18px;
+
+      padding: 18px 20px;
+
+      margin-bottom: 12px;
+
+      box-shadow: var(--shadow);
+
+      transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease;
+    }
+
+
+    .event:hover {
+      background: var(--glass-strong);
+
+      transform: translateY(-1px);
+
+      box-shadow: var(--shadow-lift);
+    }
+
+
+    /* Specular edge: a bright hairline that fades around the corner,
+       masked to the border so the fill stays clear. */
+    @supports ((-webkit-mask-composite: xor) or (mask-composite: exclude)) {
+
+      .event::before {
+        content: '';
+
+        position: absolute;
+
+        inset: 0;
+
+        border-radius: inherit;
+
+        padding: 1px;
+
+        background:
+          linear-gradient(
+            150deg,
+            rgba(255, 255, 255, 0.95),
+            rgba(255, 255, 255, 0.25) 38%,
+            rgba(255, 255, 255, 0) 62%
+          );
+
+        -webkit-mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+
+        -webkit-mask-composite: xor;
+
+        mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+
+        mask-composite: exclude;
+
+        pointer-events: none;
+      }
+    }
+
+
+    .event-time {
+      font-size: 13px;
+
+      color: var(--ink-faint);
+
+      margin-bottom: 6px;
+
+      letter-spacing: 0.01em;
+    }
+
+
+    .event-title {
+      font-size: 19px;
+
+      font-weight: 600;
+
+      letter-spacing: -0.01em;
+
+      margin-bottom: 10px;
+    }
+
+
+    .event-title a {
+      color: var(--accent);
+
+      text-decoration: none;
+    }
+
+
+    .event-title a:hover {
+      text-decoration: underline;
+    }
+
+
+    .badge {
+      display: inline-block;
+
+      margin-left: 8px;
+
+      padding: 3px 10px;
+
+      border-radius: 999px;
+
+      font-size: 11px;
+
+      font-weight: 600;
+
+      letter-spacing: 0.02em;
+
+      text-transform: uppercase;
+
+      vertical-align: middle;
+
+      -webkit-backdrop-filter: blur(6px) saturate(160%);
+      backdrop-filter: blur(6px) saturate(160%);
+
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+
+    .badge-created {
+      background: rgb(var(--accent-rgb) / 0.14);
+
+      border: 1px solid rgb(var(--accent-rgb) / 0.24);
+
+      color: var(--accent-deep);
+    }
+
+
+    .badge-invited {
+      background: rgb(var(--warn-rgb) / 0.14);
+
+      border: 1px solid rgb(var(--warn-rgb) / 0.26);
+
+      color: var(--warn-deep);
+    }
+
+
+    .event-info {
+      font-size: 14px;
+
+      color: var(--ink-soft);
+
+      margin-top: 5px;
+    }
+
+
+    .event-created {
+      margin-top: 10px;
+
+      font-size: 12px;
+
+      color: var(--ink-faint);
+    }
+
+
+    .label {
+      font-weight: 600;
+
+      color: var(--ink-soft);
+    }
+
+
+    .empty {
+      background: var(--glass);
+
+      -webkit-backdrop-filter: var(--blur);
+      backdrop-filter: var(--blur);
+
+      border: 1px solid var(--glass-edge);
+
+      border-radius: 18px;
+
+      padding: 34px;
+
+      text-align: center;
+
+      color: var(--ink-soft);
+
+      box-shadow: var(--shadow);
+    }
+
+
+    /* Stale results frost over rather than merely fading. */
+    #events {
+      transition:
+        opacity 0.2s ease,
+        filter 0.2s ease;
+    }
+
+
+    #events.stale {
+      opacity: 0.42;
+
+      filter: grayscale(0.85) blur(2px);
+
+      pointer-events: none;
+    }
+
+
+    .status.stale {
+      color: var(--warn-deep);
+
+      font-weight: 600;
+    }
+
+
+    /* Where the browser cannot blur a backdrop, or the reader asked for
+       less transparency, fall back to near-opaque panels. */
+    @supports not ((backdrop-filter: blur(1px)) or
+                   (-webkit-backdrop-filter: blur(1px))) {
+
+      .panel,
+      .event,
+      .empty {
+        background: rgba(255, 255, 255, 0.93);
+      }
+    }
+
+
+
+
+    /* ---------------------------------------------------------------
+       Mobile. Everything below lives inside media queries so the
+       desktop layout is untouched. The page previously had no viewport
+       meta at all (now set in doGet), so phones rendered it at ~980px
+       and scaled down; with the real width in play the desktop metrics
+       -- 32px page padding, 14px controls, 34px-high buttons -- are
+       too tight to read or hit.
+       --------------------------------------------------------------- */
+
+    @media (max-width: 640px) {
+
+      body {
+        padding: 16px 14px 28px;
+      }
+
+
+      h1 {
+        font-size: 23px;
+      }
+
+
+      .subtitle {
+        font-size: 13px;
+
+        margin-bottom: 8px;
+      }
+
+
+      .header {
+        gap: 12px;
+
+        margin-bottom: 16px;
+      }
+
+
+      /* The motto stays, but yields the top of the screen to the
+         controls and the list. */
+      .motto {
+        transform: rotate(-1deg);
+
+        padding-top: 0;
+      }
+
+
+      .motto-text {
+        font-size: 15px;
+      }
+
+
+      /* Indent the attribution to two characters of the quote above
+         (15px each), so the dash starts around the gap between 明 and
+         日. Desktop keeps the attribution right-aligned instead. */
+      .motto {
+        align-items: stretch;
+      }
+
+      .motto-author {
+        font-size: 12px;
+
+        margin-top: 4px;
+
+        text-align: left;
+
+        padding-left: 30px;
+      }
+
+
+      .panel {
+        padding: 14px;
+
+        border-radius: 18px;
+
+        margin-bottom: 16px;
+      }
+
+
+      /* Dates share a row while they fit and stack when they do not.
+         16px is deliberate: iOS zooms the page in on focus for any
+         smaller field. */
+      .controls {
+        gap: 8px;
+      }
+
+      input[type="date"] {
+        flex: 1 1 140px;
+
+        min-width: 0;
+
+        font-size: 16px;
+
+        padding: 10px 12px;
+      }
+
+
+      /* Refresh takes its own full-width row -- it is the primary
+         action and needs a thumb-sized target. */
+      #refresh-btn {
+        flex: 1 0 100%;
+
+        min-height: 44px;
+
+        font-size: 15px;
+      }
+
+
+      .presets {
+        gap: 8px;
+      }
+
+      .presets button {
+        flex: 1 1 0;
+
+        min-height: 44px;
+
+        font-size: 15px;
+      }
+
+
+      .roles {
+        gap: 8px 20px;
+      }
+
+      .roles label {
+        min-height: 44px;
+
+        font-size: 15px;
+      }
+
+      .roles input[type="checkbox"] {
+        width: 20px;
+
+        height: 20px;
+      }
+
+
+      .event {
+        padding: 15px 16px;
+
+        border-radius: 15px;
+      }
+
+
+      .event-title {
+        font-size: 17px;
+
+        line-height: 1.4;
+      }
+
+
+      .event-info,
+      .roles label {
+        overflow-wrap: anywhere;
+      }
+
+
+      .empty {
+        padding: 26px 18px;
+      }
+
+
+      /* Blur is the expensive part of the glass on a phone GPU. A
+         smaller radius keeps the look while easing scrolling. */
+      :root {
+        --blur: blur(12px) saturate(170%);
+      }
+    }
+
+
+    /* Very narrow phones: give each date its own line rather than
+       letting the two squeeze together. */
+    @media (max-width: 380px) {
+
+      input[type="date"] {
+        flex: 1 0 100%;
+      }
+
+      .range-sep {
+        display: none;
+      }
+    }
+
+
+    @media (prefers-reduced-transparency: reduce) {
+
+      body {
+        background-image: none;
+
+        background-color: #eef1f7;
+      }
+
+      .panel,
+      .event,
+      .empty,
+      .presets button,
+      input[type="date"] {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+
+        background: rgba(255, 255, 255, 0.96);
+      }
+    }
+
+    .demo-note {
+      background: var(--glass);
+
+      -webkit-backdrop-filter: var(--blur);
+      backdrop-filter: var(--blur);
+
+      border: 1px solid var(--glass-edge);
+
+      border-radius: 14px;
+
+      padding: 11px 15px;
+
+      margin-bottom: 20px;
+
+      font-size: 13px;
+
+      line-height: 1.6;
+
+      color: var(--ink-soft);
+
+      box-shadow: var(--shadow);
+    }
+
+
+    .demo-note a {
+      color: var(--accent);
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+  <div class="demo-note">
+    Demo with sample data — no Google account needed, and no calendar is
+    read. <a href="https://github.com/TakahiroGitLab/gcal-entry-log">Source
+    and setup on GitHub</a>.
+  </div>
+
+
+  <div class="header">
+
+    <div class="header-main">
+
+      <h1>Calendar Entry Log</h1>
+
+      <div class="subtitle">
+        What went into your calendar, and when
+      </div>
+
+      <div id="date" class="date"></div>
+
+    </div>
+
+    <!-- Optional motto, shown top-right on desktop and under the
+         title on narrow screens. Uncomment and edit to use it; the
+         styling (.motto) is already in place. Delete both if not
+         wanted -- nothing else depends on this block.
+
+    <div class="motto">
+
+      <div class="motto-text">
+        Your quote here
+      </div>
+
+      <div class="motto-author">
+        - Attribution
+      </div>
+
+    </div>
+    -->
+
+  </div>
+
+
+  <div class="panel">
+
+  <div class="controls">
+
+    <input type="date" id="start"
+           onchange="onRangeInputChange()">
+
+    <span class="range-sep">〜</span>
+
+    <input type="date" id="end"
+           onchange="onRangeInputChange()">
+
+    <button id="refresh-btn" onclick="loadEvents()">
+      ↻ Refresh
+    </button>
+
+  </div>
+
+
+  <div class="presets">
+
+    <button id="preset-yesterday"
+            onclick="setPreset(-1)">
+      Yesterday
+    </button>
+
+    <button id="preset-today"
+            onclick="setPreset(0)">
+      Today
+    </button>
+
+  </div>
+
+
+  <div class="roles">
+
+    <label>
+      <input type="checkbox" id="role-created"
+             checked onchange="onRoleChange()">
+      Created by me
+    </label>
+
+    <label>
+      <input type="checkbox" id="role-invited"
+             checked onchange="onRoleChange()">
+      Invited to me
+    </label>
+
+  </div>
+
+  </div>
+
+
+  <div id="status" class="status">
+    Loading...
+  </div>
+
+
+  <div id="events"></div>
+
+</div>
+
+
+<script>
+// Demo / screenshot fixture. Replaces the Apps Script bridge with a
+// fixed dataset, and filters it by the requested range exactly as
+// getEntriesInRange does on the server -- so the presets and the date
+// pickers genuinely change the result. Renders with no Google account
+// and touches nobody's calendar. Not part of the app.
+
+const pad = n => String(n).padStart(2, '0');
+
+function dayShift(days) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function stamp(days, hh, mm) {
+  const d = dayShift(days);
+  d.setHours(hh, mm, 0, 0);
+  return d;
+}
+
+function fmt(d) {
+  return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} `
+       + `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function isoDay(d) {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+// Spread across the past ten days so different ranges return different
+// results, with both roles on most days so the checkboxes bite too.
+// [createdOffset, createdH, createdM, role, title, startOffset,
+//  startH, startM | null for all-day, organizer, rooms, guests]
+const FIXTURE = [
+  [0, 8, 14, 'created', 'Team offsite', 21, null, null, '', ['Offsite — Harbour Room'],
+    ['Alex Park', 'Sam Rivera', 'Jordan Lee', 'Morgan Diaz', 'Priya Nair']],
+  [0, 9, 2, 'created', 'Deep work — no meetings', 1, 9, 0, '', [], []],
+  [0, 11, 37, 'invited', 'Budget sign-off with finance', 8, 11, 0, 'Priya Nair', [],
+    ['Priya Nair', 'You']],
+  [0, 15, 20, 'created', '1:1 with Jordan', 2, 15, 30, '', ['Focus Room 3'], ['Jordan Lee']],
+
+  [-1, 8, 5, 'created', 'Design review', 6, 9, 0, '', ['Meeting Room A'],
+    ['Alex Park', 'Sam Rivera', 'Jordan Lee', 'Priya Nair']],
+  [-1, 10, 48, 'invited', 'Vendor onboarding call', 3, 17, 0, 'Morgan Diaz',
+    ['Meeting Room B'], ['Morgan Diaz', 'Alex Park', 'You']],
+  [-1, 16, 12, 'created', 'Quarterly planning', 12, 13, 30, '', ['Boardroom'],
+    ['Jordan Lee', 'Alex Park']],
+
+  [-2, 9, 30, 'created', 'Interview — backend candidate', 5, 10, 0, '', ['Meeting Room A'],
+    ['Sam Rivera']],
+  [-2, 14, 3, 'invited', 'All-hands', 4, 16, 0, 'Morgan Diaz', ['Auditorium'],
+    ['Morgan Diaz', 'You']],
+
+  [-3, 8, 55, 'created', 'Sprint retro', 1, 11, 0, '', ['Focus Room 3'],
+    ['Alex Park', 'Sam Rivera']],
+  [-3, 13, 41, 'created', 'Supplier check-in', 9, 14, 0, '', [], ['Priya Nair']],
+
+  [-5, 10, 19, 'invited', 'Contract review with legal', 2, 9, 30, 'Priya Nair',
+    ['Meeting Room B'], ['Priya Nair', 'Jordan Lee', 'You']],
+
+  [-6, 17, 8, 'created', 'Board pack preparation', 16, null, null, '', [], []],
+
+  [-9, 9, 12, 'created', 'Annual leave', 30, null, null, '', [], []]
+];
+
+const SAMPLE = FIXTURE.map(row => {
+  const [cd, ch, cm, role, title, sd, sh, sm, organizer, rooms, guests] = row;
+  const created = stamp(cd, ch, cm);
+  return {
+    created_: created,
+    title: title,
+    role: role,
+    created: fmt(created),
+    start: sh === null ? isoDay(dayShift(sd)) : fmt(stamp(sd, sh, sm)),
+    url: '#',
+    organizer: organizer,
+    rooms: rooms,
+    guests: guests
+  };
+});
+
+window.google = { script: { run: {
+  withSuccessHandler(fn) { this._ok = fn; return this; },
+  withFailureHandler(fn) { this._ng = fn; return this; },
+
+  getEntriesInRange(start, end) {
+    const ok = this._ok;
+
+    // Same window the server uses: start of the first day up to the
+    // start of the day after the last one.
+    const from = new Date(`${start}T00:00:00`);
+    const to = new Date(`${end}T00:00:00`);
+    to.setDate(to.getDate() + 1);
+
+    const hits = SAMPLE
+      .filter(e => e.created_ >= from && e.created_ < to)
+      .sort((a, b) => a.created_ - b.created_)
+      .map(({ created_, ...rest }) => rest);
+
+    setTimeout(() => ok(hits), 200);
+  }
+} } };
+</script>
+
+
+<script>
+// Entries for the loaded range, both roles. Kept so that toggling a
+// role checkbox only re-renders instead of searching the calendar again.
+let cachedEntries = null;
+let cachedStart = '';
+let cachedEnd = '';
+
+
+// 'yyyy-MM-dd' in the browser's local date, not UTC.
+function toDateInputValue(date) {
+
+  const year = date.getFullYear();
+
+  const month =
+    String(date.getMonth() + 1).padStart(2, '0');
+
+  const day =
+    String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+
+
+function dateWithOffset(offsetDays) {
+
+  const date = new Date();
+
+  date.setDate(date.getDate() + offsetDays);
+
+  return date;
+}
+
+
+
+function currentRange() {
+  return {
+    start: document.getElementById('start').value,
+    end: document.getElementById('end').value
+  };
+}
+
+
+
+// Marks the list as not matching the current date inputs: dimmed,
+// inert, with the Refresh button calling for attention. A text warning
+// alone is too easy to walk past.
+function setStale(isStale) {
+
+  document
+    .getElementById('events')
+    .classList
+    .toggle('stale', isStale);
+
+  document
+    .getElementById('status')
+    .classList
+    .toggle('stale', isStale);
+
+  document
+    .getElementById('refresh-btn')
+    .classList
+    .toggle('needs-refresh', isStale);
+}
+
+
+
+function cacheMatchesInputs() {
+
+  const range = currentRange();
+
+  return cachedEntries !== null &&
+    range.start === cachedStart &&
+    range.end === cachedEnd;
+}
+
+
+
+// Set both inputs to a single day and reload.
+function setPreset(offsetDays) {
+
+  const value =
+    toDateInputValue(dateWithOffset(offsetDays));
+
+  document.getElementById('start').value = value;
+
+  document.getElementById('end').value = value;
+
+  loadEvents();
+}
+
+
+
+// Toggling a role only re-filters the loaded entries. The calendar is
+// searched again only when the range no longer matches the cache.
+function onRoleChange() {
+
+  if (cacheMatchesInputs()) {
+    render();
+    return;
+  }
+
+  loadEvents();
+}
+
+
+
+// Changing a date does not search on its own -- say so rather than
+// leaving results from the previous range looking current.
+function onRangeInputChange() {
+
+  updatePresetState();
+
+
+  if (cachedEntries === null) return;
+
+
+  if (cacheMatchesInputs()) {
+
+    // Edited back to the loaded range -- the list is current again.
+    render();
+
+    return;
+  }
+
+
+  setStale(true);
+
+  document.getElementById('status').textContent =
+    'Date range changed — press ↻ Refresh to search.';
+}
+
+
+
+function updatePresetState() {
+
+  const range = currentRange();
+
+
+  const presets = [
+    { id: 'preset-yesterday', offset: -1 },
+    { id: 'preset-today', offset: 0 }
+  ];
+
+
+  presets.forEach(preset => {
+
+    const expected =
+      toDateInputValue(dateWithOffset(preset.offset));
+
+    const isActive =
+      range.start === expected &&
+      range.end === expected;
+
+    document
+      .getElementById(preset.id)
+      .classList
+      .toggle('active', isActive);
+  });
+
+
+  updateRangeLabel(range.start, range.end);
+}
+
+
+
+function updateRangeLabel(start, end) {
+
+  const label = document.getElementById('date');
+
+
+  if (!start || !end) {
+    label.textContent = '';
+    return;
+  }
+
+
+  const from = start.replace(/-/g, '/');
+
+  const to = end.replace(/-/g, '/');
+
+
+  label.textContent =
+    from === to
+      ? from
+      : `${from} 〜 ${to}`;
+}
+
+
+
+// Searches the calendar. Only the Refresh button, the presets and a
+// role toggle on a stale range reach this.
+function loadEvents() {
+
+  const range = currentRange();
+
+  const status =
+    document.getElementById('status');
+
+
+  updatePresetState();
+
+  setStale(false);
+
+  document.getElementById('events').innerHTML = '';
+
+
+  if (!range.start || !range.end) {
+
+    cachedEntries = null;
+
+    status.textContent =
+      'Please select both a start and an end date.';
+
+    return;
+  }
+
+
+  if (range.start > range.end) {
+
+    cachedEntries = null;
+
+    status.textContent =
+      'Start date must be on or before end date.';
+
+    return;
+  }
+
+
+  status.textContent = 'Loading...';
+
+
+  google.script.run
+
+    .withSuccessHandler(entries => {
+
+      cachedEntries = entries || [];
+
+      cachedStart = range.start;
+
+      cachedEnd = range.end;
+
+      render();
+    })
+
+    .withFailureHandler(showError)
+
+    .getEntriesInRange(range.start, range.end);
+}
+
+
+
+function summarize(entries) {
+
+  const created =
+    entries.filter(e => e.role === 'created').length;
+
+  const invited =
+    entries.filter(e => e.role === 'invited').length;
+
+
+  const total =
+    `${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}`;
+
+
+  if (created > 0 && invited > 0) {
+    return `${total} — ${created} created, ${invited} invited`;
+  }
+
+  return total;
+}
+
+
+
+// Draws the cached entries through the current role checkboxes.
+// Never touches the server.
+function render() {
+
+  const container =
+    document.getElementById('events');
+
+  const status =
+    document.getElementById('status');
+
+
+  container.innerHTML = '';
+
+  setStale(false);
+
+
+  const includeCreated =
+    document.getElementById('role-created').checked;
+
+  const includeInvited =
+    document.getElementById('role-invited').checked;
+
+
+  if (!includeCreated && !includeInvited) {
+
+    status.textContent =
+      'Please check at least one of "Created by me" or "Invited to me".';
+
+    return;
+  }
+
+
+  const loaded = cachedEntries || [];
+
+
+  const entries = loaded.filter(entry => {
+
+    if (entry.role === 'created') return includeCreated;
+
+    if (entry.role === 'invited') return includeInvited;
+
+    return false;
+  });
+
+
+  if (entries.length === 0) {
+
+    const filteredOut = loaded.length > 0;
+
+    status.textContent =
+      filteredOut
+        ? 'No entries match the selected roles.'
+        : 'No entries in this range.';
+
+    container.innerHTML =
+      '<div class="empty">' +
+      (
+        filteredOut
+          ? 'Nothing matches the selected roles in this range.'
+          : 'No matching entries were found.'
+      ) +
+      '</div>';
+
+    return;
+  }
+
+
+  status.textContent = summarize(entries);
+
+
+  entries.forEach(event => {
+
+    const div =
+      document.createElement('div');
+
+    div.className = 'event';
+
+
+    // Event date/time
+
+    const time =
+      document.createElement('div');
+
+    time.className = 'event-time';
+
+    time.textContent =
+      event.start || 'Date/time not specified';
+
+
+    // Event title
+
+    const title =
+      document.createElement('div');
+
+    title.className = 'event-title';
+
+
+    if (event.url) {
+
+      const link =
+        document.createElement('a');
+
+      link.href = event.url;
+
+      link.target = '_blank';
+
+      link.rel = 'noopener noreferrer';
+
+      link.textContent =
+        event.title;
+
+      title.appendChild(link);
+
+    } else {
+
+      title.appendChild(
+        document.createTextNode(event.title)
+      );
+    }
+
+
+    // Role badge
+
+    const badge =
+      document.createElement('span');
+
+    badge.className =
+      event.role === 'invited'
+        ? 'badge badge-invited'
+        : 'badge badge-created';
+
+    badge.textContent =
+      event.role === 'invited'
+        ? 'Invited'
+        : 'Created';
+
+    title.appendChild(badge);
+
+
+    div.appendChild(time);
+
+    div.appendChild(title);
+
+
+    // Organizer (only set when someone else set it up)
+
+    if (event.organizer) {
+
+      const organizer =
+        document.createElement('div');
+
+      organizer.className =
+        'event-info';
+
+      organizer.innerHTML =
+        '<span class="label">Organizer:</span> ' +
+        event.organizer;
+
+      div.appendChild(organizer);
+    }
+
+
+    // Rooms
+
+    if (event.rooms && event.rooms.length > 0) {
+
+      const rooms =
+        document.createElement('div');
+
+      rooms.className =
+        'event-info';
+
+      rooms.innerHTML =
+        '<span class="label">Room:</span> ' +
+        event.rooms.join(', ');
+
+      div.appendChild(rooms);
+    }
+
+
+    // Guests
+
+    if (event.guests && event.guests.length > 0) {
+
+      const guests =
+        document.createElement('div');
+
+      guests.className =
+        'event-info';
+
+      guests.innerHTML =
+        '<span class="label">Guests:</span> ' +
+        event.guests.join(', ');
+
+      div.appendChild(guests);
+    }
+
+
+    // Creation time
+
+    const created =
+      document.createElement('div');
+
+    created.className =
+      'event-created';
+
+    created.textContent =
+      `Created: ${event.created}`;
+
+
+    div.appendChild(created);
+
+    container.appendChild(div);
+
+  });
+
+}
+
+
+
+function showError(error) {
+
+  cachedEntries = null;
+
+
+  document.getElementById('status').textContent =
+    'An error occurred.';
+
+
+  document.getElementById('events').innerHTML =
+
+    '<div class="empty">' +
+
+    error.message +
+
+    '</div>';
+}
+
+
+// Start on today
+
+setPreset(0);
+
+</script>
+
+
+</body>
+</html>

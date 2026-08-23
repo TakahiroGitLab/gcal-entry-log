@@ -18,10 +18,30 @@ It is useful if you book things on other people's behalf, need to check
 at the end of the day that everything you entered actually landed, or
 want a record of what was scheduled during a given week.
 
-## Screenshot
+## Try it
 
-Run it and see — the UI is a single translucent-glass page with a date
-range, `Yesterday` / `Today` presets, and two role checkboxes.
+**[Live demo](https://takahirogitlab.github.io/gcal-entry-log/)** — runs on
+sample data, so it needs no Google account and reads nobody's calendar.
+The date range and the role checkboxes behave exactly as they do against
+a real calendar.
+
+## Screenshots
+
+Pick a range and get everything entered inside it, oldest first, with a
+count broken down by role.
+
+![The full list for a nine-day range, showing entries created and entries invited, each with its room, guests and creation time](docs/media/range.png)
+
+Untick a role to narrow it. Entries someone else set up also name the
+organiser.
+
+![The same range with only "Invited to me" ticked, showing four entries, each listing its organiser](docs/media/invited-only.png)
+
+Change a date without refreshing and the list frosts over and stops
+taking clicks, so results from the previous range cannot be misread as
+current.
+
+![The list dimmed, blurred and desaturated after a date edit, with an amber warning and a highlighted Refresh button](docs/media/stale.png)
 
 ## Setup
 

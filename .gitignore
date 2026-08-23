@@ -8,5 +8,9 @@ preview/
 # real Apps Script project. Holds a script id and its own access level.
 demo/
 
+# Full-resolution screen captures. The cropped, downscaled versions the
+# README uses live in docs/media/.
+to_claude_from_me/
+
 .DS_Store
 node_modules/
