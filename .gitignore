@@ -4,5 +4,9 @@
 # Local rendering aids (mock data, theme comparisons), not part of the release.
 preview/
 
+# A private deployment of the published source, used to try changes in a
+# real Apps Script project. Holds a script id and its own access level.
+demo/
+
 .DS_Store
 node_modules/
