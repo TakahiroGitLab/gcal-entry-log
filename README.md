@@ -25,6 +25,17 @@ sample data, so it needs no Google account and reads nobody's calendar.
 The date range and the role checkboxes behave exactly as they do against
 a real calendar.
 
+## Walkthrough
+
+Forty seconds through the whole thing: the presets, a custom range, the
+role checkboxes, and what happens when the dates stop matching the
+results.
+
+<video src="https://github.com/user-attachments/assets/cf075376-4613-4162-85ed-f7f73a6e7800" controls></video>
+
+(If the player does not appear, your renderer is not GitHub —
+[watch it here](https://github.com/user-attachments/assets/cf075376-4613-4162-85ed-f7f73a6e7800).)
+
 ## Screenshots
 
 Pick a range and get everything entered inside it, oldest first, with a
