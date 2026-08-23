@@ -12,5 +12,8 @@ demo/
 # README uses live in docs/media/.
 to_claude_from_me/
 
+# Article drafts about the project, published elsewhere.
+article/
+
 .DS_Store
 node_modules/
