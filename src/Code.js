@@ -1,7 +1,7 @@
 function doGet() {
   return HtmlService
     .createHtmlOutputFromFile('index')
-    .setTitle('Calendar Entries by Role')
+    .setTitle('Calendar Entry Log')
     // HtmlService strips <meta> from the file, so the viewport has to
     // be declared here. Without it phones lay the page out at ~980px
     // and scale the result down, which is why it reads so small.

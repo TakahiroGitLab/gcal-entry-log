@@ -6,7 +6,7 @@
 
   <meta charset="UTF-8">
 
-  <title>Calendar Entries by Role</title>
+  <title>Calendar Entry Log</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
 
@@ -126,8 +126,17 @@
     }
 
 
-    .date {
+    .subtitle {
       color: var(--ink-soft);
+
+      font-size: 14px;
+
+      margin-bottom: 10px;
+    }
+
+
+    .date {
+      color: var(--ink-faint);
     }
 
 
@@ -688,6 +697,13 @@
       }
 
 
+      .subtitle {
+        font-size: 13px;
+
+        margin-bottom: 8px;
+      }
+
+
       .header {
         gap: 12px;
 
@@ -874,7 +890,11 @@
 
     <div class="header-main">
 
-      <h1>Calendar Entries by Role</h1>
+      <h1>Calendar Entry Log</h1>
+
+      <div class="subtitle">
+        What went into your calendar, and when
+      </div>
 
       <div id="date" class="date"></div>
 

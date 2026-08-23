@@ -1,4 +1,4 @@
-# gcal-entry-audit
+# Calendar Entry Log
 
 A small Google Apps Script web app that answers a question Google
 Calendar itself does not: **"what did I put in the calendar during this
@@ -32,7 +32,7 @@ git clone <this repo>
 cd gcal-entry-audit
 
 # 1. Create a standalone Apps Script project
-clasp create-script --type standalone --title "Calendar Entry Audit" --rootDir src
+clasp create-script --type standalone --title "Calendar Entry Log" --rootDir src
 
 # 2. Push the code
 clasp push -f
