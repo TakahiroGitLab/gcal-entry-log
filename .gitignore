@@ -1,0 +1,8 @@
+# clasp writes your own script id here -- keep it out of the repo.
+.clasp.json
+
+# Local rendering aids (mock data, theme comparisons), not part of the release.
+preview/
+
+.DS_Store
+node_modules/
