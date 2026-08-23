@@ -47,22 +47,35 @@ current.
 
 You need [clasp](https://github.com/google/clasp) and a Google account.
 
+**First, turn on the Apps Script API** for your account, once, at
+[script.google.com/home/usersettings](https://script.google.com/home/usersettings).
+Without it every `clasp` command fails with *"User has not enabled the
+Apps Script API"*.
+
 ```bash
-git clone <this repo>
-cd gcal-entry-audit
+git clone https://github.com/TakahiroGitLab/gcal-entry-log.git
+cd gcal-entry-log
+```
 
-# 1. Create a standalone Apps Script project
-clasp create-script --type standalone --title "Calendar Entry Log" --rootDir src
+Create an empty standalone project at
+[script.google.com](https://script.google.com), open **Project Settings**
+and copy its **Script ID**. Then point clasp at it:
 
-# 2. Push the code
+```bash
+cp .clasp.json.example .clasp.json
+# paste the Script ID into .clasp.json
+
 clasp push -f
-
-# 3. Deploy as a web app
 clasp create-deployment -d "v1"
 ```
 
-Alternatively, copy `.clasp.json.example` to `.clasp.json`, paste the id
-of an existing script, and push.
+`.clasp.json` is gitignored, so your script id stays out of the repo.
+
+> Creating the project with `clasp create-script --rootDir src` also
+> works, but clasp writes its own `appsscript.json` into the root
+> directory, which would overwrite the manifest in `src/` that carries
+> the Calendar service and the web app settings. If you go that route,
+> restore it with `git checkout src/appsscript.json` before pushing.
 
 Open the deployment URL. The first visit asks you to authorise Calendar
 access.
