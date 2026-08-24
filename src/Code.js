@@ -59,15 +59,21 @@ function getEntriesInRange(startDateString, endDateString) {
   const events = [];
 
   do {
-    const response = Calendar.Events.list(calendarId, {
-      // An event is always updated at or after it was created,
-      // so this is a safe prefilter for "created on/after rangeStart".
-      updatedMin: rangeStart.toISOString(),
-      showDeleted: false,
-      singleEvents: false,
-      maxResults: 2500,
-      pageToken: pageToken
-    });
+    let response;
+
+    try {
+      response = Calendar.Events.list(calendarId, {
+        // An event is always updated at or after it was created,
+        // so this is a safe prefilter for "created on/after rangeStart".
+        updatedMin: rangeStart.toISOString(),
+        showDeleted: false,
+        singleEvents: false,
+        maxResults: 2500,
+        pageToken: pageToken
+      });
+    } catch (err) {
+      throw describeListFailure(err, startDateString);
+    }
 
     if (response.items) {
       events.push(...response.items);
@@ -186,6 +192,34 @@ function getEntriesInRange(startDateString, endDateString) {
   });
 }
 
+
+
+/**
+ * Turn a Calendar API failure into something worth showing on the page.
+ *
+ * The one worth naming is a start date from before the calendar itself
+ * existed: the API rejects such an updatedMin rather than returning an
+ * empty result, which would otherwise reach the user as a stack trace.
+ */
+function describeListFailure(error, startDateString) {
+
+  const detail =
+    (error && error.message) ? error.message : String(error);
+
+  const tooFarBack =
+    detail.indexOf('410') !== -1 ||
+    /\bgone\b/i.test(detail);
+
+  if (tooFarBack) {
+    return new Error(
+      'This calendar cannot be searched back as far as ' +
+      startDateString +
+      '. Try a more recent start date.'
+    );
+  }
+
+  return new Error('Could not read the calendar: ' + detail);
+}
 
 /**
  * Classify how the current user is involved in an event.

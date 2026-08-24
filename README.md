@@ -174,6 +174,10 @@ These are worth understanding before relying on it.
 - **Resource detection is a heuristic.** An attendee counts as a room if
   `resource === true` or its address contains `resource`. Unusual
   resource naming may land in the guest list instead.
+- **A start date older than the calendar is rejected.** The API refuses
+  an `updatedMin` from before the calendar existed rather than returning
+  nothing, so the page reports that the range reaches too far back
+  instead of showing an empty list.
 
 ## License
 
