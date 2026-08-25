@@ -18,6 +18,12 @@ It is useful if you book things on other people's behalf, need to check
 at the end of the day that everything you entered actually landed, or
 want a record of what was scheduled during a given week.
 
+There is a write-up of the Calendar API and Apps Script problems behind
+it — no way to query events by creation time, the viewport meta tag
+being stripped, and why `clasp push` leaves the deployed version
+untouched — on Zenn, in Japanese:
+[Googleカレンダーの「いつ登録したか」を見る画面をApps Scriptで作った](https://zenn.dev/takagit/articles/gcal-entry-log-apps-script).
+
 ## Try it
 
 **[Live demo](https://takahirogitlab.github.io/gcal-entry-log/)** — runs on
